@@ -1,8 +1,25 @@
-import { render, screen } from '@testing-library/react';
-import App from './App';
+import { useState, useEffect } from 'react';
+import Homepage from './Homepage';
+import Project from './Project';
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
-});
+function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const user = localStorage.getItem('authenticatedUser');
+    if (user) setIsAuthenticated(true);
+  }, []);
+
+  const handleAuthSuccess = (userData) => {
+    localStorage.setItem('authenticatedUser', JSON.stringify(userData));
+    setIsAuthenticated(true);
+  };
+
+  return isAuthenticated ? (
+    <Project />
+  ) : (
+    <Homepage onAuthSuccess={handleAuthSuccess} />
+  );
+}
+
+export default App;
