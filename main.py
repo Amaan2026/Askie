@@ -1,28 +1,29 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import google.generativeai as genai
 from pydantic import BaseModel
+from fastapi.responses import JSONResponse
+import google.generativeai as genai
+from dotenv import load_dotenv
+import os
+
+load_dotenv()  # Load environment variables from .env
 
 app = FastAPI()
 
-
+# CORS setup
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React app URL
+    allow_origins=["*"],  # Use specific domains in production
     allow_credentials=True,
-    allow_methods=["*"],   # Allow all methods including OPTIONS
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-# Replace with your actual API key
-genai.configure(api_key="AIzaSyBflqoYeiigqMKWvDctvzarsXLgVtPLTO0")
-
-# Init model
+# Configure Gemini
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
 model = genai.GenerativeModel(model_name="models/gemini-1.5-flash")
 
-# FastAPI setup
-
+# Request model
 class PromptRequest(BaseModel):
     prompt: str
 
@@ -34,8 +35,14 @@ async def root():
 async def generate_text(req: PromptRequest):
     try:
         response = model.generate_content(req.prompt)
-        return {"response": response.text.strip().replace("**", "")}
 
+        # Access Gemini response content properly
+        text = (
+            response.text.strip().replace("**", "")
+            if hasattr(response, "text")
+            else response.candidates[0].content.parts[0].text.strip()
+        )
+
+        return {"response": text}
     except Exception as e:
-        return {"error": str(e)}
-
+        return JSONResponse(status_code=500, content={"error": str(e)})

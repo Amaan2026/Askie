@@ -17,16 +17,15 @@ function Project() {
       });
 
       const data = await res.json();
-      setResponse(data.response || data.error);
+      setResponse(data.response || data.error || "No response received.");
     } catch (error) {
-      setResponse("An error occurred...");
+      setResponse("An error occurred while connecting to the backend.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const toggleTheme = () => {
-    setDarkMode(!darkMode);
-  };
+  const toggleTheme = () => setDarkMode(!darkMode);
 
   const appStyle = {
     backgroundColor: darkMode ? "#121212" : "#f4f4f4",
@@ -84,8 +83,13 @@ function Project() {
   return (
     <div style={appStyle}>
       <div style={toggleContainer}>
-        <label className="switch">
-          <input type="checkbox" checked={darkMode} onChange={toggleTheme} />
+        <label className="switch" htmlFor="theme-toggle">
+          <input
+            id="theme-toggle"
+            type="checkbox"
+            checked={darkMode}
+            onChange={toggleTheme}
+          />
           <span className="slider"></span>
         </label>
         <span style={toggleLabel}>{darkMode ? "Dark Mode" : "Light Mode"}</span>
